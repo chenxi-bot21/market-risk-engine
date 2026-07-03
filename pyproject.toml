@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "marketrisk"
+version = "1.0.0"
+description = "Multi-asset market-risk engine: historical/parametric/Cornish-Fisher/Monte Carlo VaR & ES, EWMA + GARCH(1,1) volatility, Euler risk decomposition, and Kupiec/Christoffersen/Basel backtesting."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Chenxi Zhao", email = "cz3291@nyu.edu" }]
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.0",
+    "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+live = ["yfinance>=0.2"]              # real prices via Yahoo Finance
+app = ["streamlit>=1.30", "plotly>=5.18"]   # interactive dashboard
+
+[project.scripts]
+marketrisk = "marketrisk.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
