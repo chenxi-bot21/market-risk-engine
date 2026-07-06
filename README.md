@@ -73,8 +73,8 @@ pip install -e ".[app]"     # streamlit + plotly
 streamlit run app.py
 ```
 
-Four tabs: VaR/ES method comparison · EWMA vs GARCH volatility (+ forecast) ·
-backtest chart with violations and test table · component-VaR decomposition.
+Five tabs: VaR/ES method comparison · EWMA vs GARCH volatility (+ forecast) ·
+backtest chart with violations and test table · component-VaR decomposition · stress scenarios.
 
 ## What's inside
 
