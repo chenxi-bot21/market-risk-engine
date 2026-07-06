@@ -91,7 +91,22 @@ do to *this* book". Two standard flavours, both in `scenarios.py`:
   assumption, and each row carries auditable start/end dates. Tested against an
   engineered crash (the finder must locate the exact planted window).
 
-## 6. Data
+## 6. EVT tail estimation (Peaks-over-Threshold)
+
+Historical VaR cannot see beyond the worst day in the sample; the normal
+understates tails. For the far tail (99.5%+, where regulators live) we fit a
+**Generalized Pareto Distribution** to loss exceedances over the 95th-percentile
+threshold (Pickands–Balkema–de Haan) and extrapolate:
+
+```
+VaR_q = u + (β/ξ)[((1−q)/(N_u/n))^(−ξ) − 1],   ES_q = VaR_q/(1−ξ) + (β−ξu)/(1−ξ)
+```
+
+ξ > 0 flags a Pareto-type heavy tail (t(4) data fits ξ ≈ 0.25 — verified by
+test); ES requires ξ < 1. Tests also pin behaviour: EVT ≫ normal VaR at 99.9%
+on heavy-tailed data, and EVT ≈ historical inside the sample.
+
+## 7. Data
 
 Offline-first: a **seeded, correlated-GBM synthetic book** (equity / bond /
 gold / FX with a plausible correlation matrix, e.g. negative equity–bond) so
@@ -107,5 +122,3 @@ the credit-risk project's `datasets.resolve_dataset`.
   would capture joint fat tails.
 - GARCH errors are normal; GJR/EGARCH asymmetry and t-errors are the obvious
   next steps and slot into the same `GarchResult` interface.
-- No EVT (peaks-over-threshold) tail estimator yet — listed as future work
-  rather than half-implemented.

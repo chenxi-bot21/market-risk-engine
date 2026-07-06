@@ -17,6 +17,7 @@ import numpy as np
 from . import backtest as bt
 from . import data, returns as ret
 from .decompose import component_var
+from .evt import fit_gpd_tail
 from .report import build_report
 from .scenarios import stress_report
 from .var import var_summary
@@ -72,6 +73,13 @@ def run(argv: list[str] | None = None) -> int:
     print(f"\n{int(args.alpha * 100)}% one-day VaR / ES")
     for k, v in summary.as_dict().items():
         print(f"  {k:<28s} {v * 100:6.3f}%")
+    try:
+        tail = fit_gpd_tail(port.to_numpy())
+        print(f"\nEVT tail (GPD over {int(tail.threshold_q * 100)}th pct losses): "
+              f"xi={tail.xi:.3f} -> 99.9% VaR {tail.var(0.999) * 100:.3f}%, "
+              f"ES {tail.es(0.999) * 100:.3f}%")
+    except ValueError as exc:
+        print(f"\nEVT tail: skipped ({exc})")
     print(f"\nGARCH(1,1): persistence={garch.persistence:.3f}, "
           f"long-run vol={garch.long_run_vol * 100:.3f}%/day")
     tl = bt_out["traffic_light"]
