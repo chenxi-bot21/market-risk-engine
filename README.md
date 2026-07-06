@@ -3,16 +3,17 @@
 <p>
   <a href="https://github.com/chenxi-bot21/market-risk-engine/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/chenxi-bot21/market-risk-engine/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-41%20passing-2E4057">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-49%20passing-2E4057">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
 A market-risk engine covering the full desk workflow: **Value-at-Risk and
 Expected Shortfall** by four methods (historical, parametric-normal,
 Cornish-Fisher, Monte Carlo), **EWMA and GARCH(1,1)** volatility, **Euler
-risk decomposition** (component VaR), and a **regulatory-grade backtest**
-(rolling out-of-sample VaR + Kupiec POF, Christoffersen independence /
-conditional coverage, Basel traffic light).
+risk decomposition** (component VaR), **stress testing & scenario analysis**
+(hypothetical shock library + historical worst-window replay), and a
+**regulatory-grade backtest** (rolling out-of-sample VaR + Kupiec POF,
+Christoffersen independence / conditional coverage, Basel traffic light).
 
 Pairs with the [credit-risk PD/IFRS 9 project](https://github.com/chenxi-bot21/credit-risk-model)
 to cover both halves of a bank risk stack: **credit + market risk**.
@@ -83,12 +84,13 @@ backtest chart with violations and test table · component-VaR decomposition.
 | `volatility.py` | RiskMetrics **EWMA** (λ=0.94) and **GARCH(1,1) by MLE** (scipy L-BFGS-B, feasibility-penalised), with mean-reverting vol forecasts |
 | `decompose.py` | Marginal & **component VaR** via Euler allocation — components sum *exactly* to total VaR (tested to 1e-12) |
 | `backtest.py` | Walk-forward VaR (no look-ahead), **Kupiec POF**, **Christoffersen** independence & conditional coverage, **Basel traffic light** |
+| `scenarios.py` | **Stress testing**: hypothetical shock library (GFC-style crash, rates spike, flight-to-quality…) + empirical worst-k-day **historical replay** with auditable dates |
 | `data.py` | Reproducible correlated-GBM synthetic book / CSV / `yfinance` (pluggable) |
 | `report.py`, `cli.py` | Markdown risk report + `python -m marketrisk` CLI |
 
 ## Engineering
 
-- `src/` package layout, typed dataclasses, **41 unit tests** including
+- `src/` package layout, typed dataclasses, **49 unit tests** including
   closed-form checks (normal VaR/ES vs analytic values), Euler-additivity to
   12 decimals, seeded Monte-Carlo determinism, GARCH parameter recovery on
   simulated GARCH data, and statistical-test behaviour (clustered violations

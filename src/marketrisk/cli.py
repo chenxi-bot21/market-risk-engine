@@ -18,6 +18,7 @@ from . import backtest as bt
 from . import data, returns as ret
 from .decompose import component_var
 from .report import build_report
+from .scenarios import stress_report
 from .var import var_summary
 from .volatility import fit_garch
 
@@ -45,6 +46,8 @@ def run(argv: list[str] | None = None) -> int:
     p.add_argument("--method", default="historical", choices=["historical", "parametric"],
                    help="VaR method for the rolling backtest")
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--stress-horizon", type=int, default=5,
+                   help="window (days) for historical worst-case stress replay")
     p.add_argument("--output", default="output", help="report directory")
     args = ap.parse_args(argv)
 
@@ -64,6 +67,7 @@ def run(argv: list[str] | None = None) -> int:
     garch = fit_garch(port)
     bt_out = bt.backtest_report(port, window=args.window, alpha=args.alpha,
                                 method=args.method)
+    stress = stress_report(R, w, horizon=args.stress_horizon)
 
     print(f"\n{int(args.alpha * 100)}% one-day VaR / ES")
     for k, v in summary.as_dict().items():
@@ -76,6 +80,13 @@ def run(argv: list[str] | None = None) -> int:
     for t in bt_out["tests"]:
         print(f"  {t.name:<32s} LR={t.statistic:6.3f}  p={t.p_value:.3f}"
               f"  {'REJECT' if t.reject_95 else 'pass'}")
+    print(f"\nStress scenarios (hypothetical):")
+    for r in stress["presets"]:
+        print(f"  {r.name:<28s} P&L {r.total_pnl * 100:7.2f}%")
+    ww = stress["worst_windows"]
+    print(f"Worst {args.stress_horizon}-day historical window: "
+          f"{ww['cum_return'].iloc[0] * 100:.2f}% "
+          f"({ww['start'].iloc[0].date()} → {ww['end'].iloc[0].date()})")
 
     report = build_report(
         summary, decomp,
@@ -86,6 +97,7 @@ def run(argv: list[str] | None = None) -> int:
         backtest_info={**bt_out, "window": args.window, "method": args.method,
                        "n_out": len(bt_out["backtest"])},
         portfolio_desc=f"{', '.join(prices.columns)} @ {np.round(w, 3).tolist()}",
+        stress_info={**stress, "horizon": args.stress_horizon},
     )
     out = Path(args.output)
     out.mkdir(parents=True, exist_ok=True)

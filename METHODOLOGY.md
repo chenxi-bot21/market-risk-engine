@@ -75,7 +75,23 @@ The test suite constructs violation sequences with known properties
 spread out → passes) so the statistics are verified behaviourally, not just
 numerically.
 
-## 5. Data
+## 5. Stress testing & scenario analysis
+
+VaR answers "how bad is a normal bad day"; stress answers "what does a crisis
+do to *this* book". Two standard flavours, both in `scenarios.py`:
+
+- **Hypothetical scenarios** — instantaneous per-asset return shocks
+  (`P&L_i = w_i · shock_i`, the same first-order approximation as delta-normal
+  VaR). A preset library covers the canonical episodes (GFC-style equity crash,
+  2020-style pandemic shock, +200bp rates spike, flight-to-quality, USD
+  squeeze); assets absent from the portfolio are skipped and reported, so the
+  same scenarios run on any book.
+- **Historical stress (empirical replay)** — the worst non-overlapping k-day
+  windows the portfolio itself experienced in-sample: no distributional
+  assumption, and each row carries auditable start/end dates. Tested against an
+  engineered crash (the finder must locate the exact planted window).
+
+## 6. Data
 
 Offline-first: a **seeded, correlated-GBM synthetic book** (equity / bond /
 gold / FX with a plausible correlation matrix, e.g. negative equity–bond) so
