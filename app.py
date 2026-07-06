@@ -14,7 +14,7 @@ import streamlit as st
 
 from marketrisk import (backtest_report, component_var, ewma_volatility,
                         fit_garch, log_returns, portfolio_returns,
-                        synthetic_prices, var_summary)
+                        stress_report, synthetic_prices, var_summary)
 from marketrisk.data import load_csv
 
 st.set_page_config(page_title="Market Risk Engine", layout="wide")
@@ -61,13 +61,14 @@ def _analyse(prices_key: pd.DataFrame, w_key: tuple, alpha_key: float,
     garch = fit_garch(port)
     ewma = ewma_volatility(port)
     bt = backtest_report(port, window=window_key, alpha=alpha_key, method=method_key)
-    return R, port, summary, decomp, garch, ewma, bt
+    stress = stress_report(R, wv)
+    return R, port, summary, decomp, garch, ewma, bt, stress
 
 
-R, port, summary, decomp, garch, ewma, bt = _analyse(prices, tuple(w), alpha,
-                                                     window, method)
-tab1, tab2, tab3, tab4 = st.tabs(
-    ["VaR / ES", "Volatility", "Backtest", "Decomposition"])
+R, port, summary, decomp, garch, ewma, bt, stress = _analyse(
+    prices, tuple(w), alpha, window, method)
+tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    ["VaR / ES", "Volatility", "Backtest", "Decomposition", "Stress"])
 
 # ---------------- Tab 1: VaR / ES ----------------
 with tab1:
@@ -149,3 +150,26 @@ with tab4:
     st.table(show)
     st.caption(f"Euler allocation: components sum exactly to total VaR "
                f"({decomp.attrs['total_var']*100:.3f}%), netting diversification.")
+
+# ---------------- Tab 5: Stress ----------------
+with tab5:
+    st.subheader("Hypothetical scenarios")
+    pres = stress["presets"]
+    fig = go.Figure(go.Bar(x=[r.name for r in pres],
+                           y=[r.total_pnl * 100 for r in pres],
+                           marker_color=["crimson" if r.total_pnl < 0 else "#1a3d6d"
+                                         for r in pres]))
+    fig.update_layout(yaxis_title="portfolio P&L (%)", height=360,
+                      margin=dict(t=30, b=10))
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.subheader("Worst historical 5-day windows (empirical replay)")
+    ww = stress["worst_windows"].copy()
+    ww["cum_return"] = (ww["cum_return"] * 100).round(2).astype(str) + "%"
+    ww["start"] = ww["start"].dt.date
+    ww["end"] = ww["end"].dt.date
+    st.table(ww)
+    st.caption("VaR asks 'how bad is a normal bad day'; stress asks 'what does "
+               "a crisis do to this book'. Hypothetical shocks are first-order "
+               "(weight x shock); historical windows are replayed from the data "
+               "with auditable dates.")
